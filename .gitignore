@@ -4,3 +4,9 @@
 *.pth
 result*
 weights*
+uv.lock
+__pycache__
+.DS_Store
+.ipynb_checkpoints
+.venv
+pyproject.toml
