@@ -9,6 +9,9 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import numpy as np
+import os
+import tarfile
+import hashlib
 
 try:
     import cv2  # type: ignore
@@ -27,6 +30,7 @@ try:
 except Exception:  # pragma: no cover - environment dependent
     SKIMAGE_AVAILABLE = False
 
+# TODO IMPORTAR PADDLE OCR: https://stackoverflow.com/questions/76728440/not-able-to-import-paddleocr-library-on-google-colab
 
 # ---- Types --------------------------------------------------------------------
 
@@ -326,7 +330,73 @@ class ImageCleanup:
         Raises:
             NotImplementedError: Until integrated with actual model downloaders.
         """
-        raise NotImplementedError("Model downloader is not implemented in this reference class.")
+        # EAST Model ------------------------------------------------------------------
+        import urllib.request
+
+        models_dir = "models"
+        os.makedirs(models_dir, exist_ok=True)
+        east_url = "https://www.dropbox.com/s/r2ingd0l3zt8hxs/frozen_east_text_detection.tar.gz?dl=1"
+        east_tar_path = os.path.join(models_dir, "frozen_east_text_detection.tar.gz")
+
+        if not os.path.exists(east_tar_path):
+            print("Downloading EAST model...")
+            urllib.request.urlretrieve(east_url, east_tar_path)
+
+        with tarfile.open(east_tar_path, "r:gz") as tar:
+            tar.extractall(path=models_dir)
+        print("EAST model downloaded and unpacked in 'models/'")
+
+        # DBNet Models ---------------------------------------------------------------
+        db_models = [
+            {
+            "filename": "DB_IC15_resnet50.onnx",
+            "url": "https://drive.google.com/uc?export=download&id=17_ABp79PlFt9yPCxSaarVc_DKTmrSGGf",
+            "sha1": "bef233c28947ef6ec8c663d20a2b326302421fa3",
+            },
+            {
+            "filename": "DB_IC15_resnet18.onnx",
+            "url": "https://drive.google.com/uc?export=download&id=1vY_KsDZZZb_svd5RT6pjyI8BS1nPbBSX",
+            "sha1": "19543ce09b2efd35f49705c235cc46d0e22df30b",
+            },
+            {
+            "filename": "DB_TD500_resnet50.onnx",
+            "url": "https://drive.google.com/uc?export=download&id=19YWhArrNccaoSza0CfkXlA8im4-lAGsR",
+            "sha1": "1b4dd21a6baa5e3523156776970895bd3db6960a",
+            },
+            {
+            "filename": "DB_TD500_resnet18.onnx",
+            "url": "https://drive.google.com/uc?export=download&id=1sZszH3pEt8hliyBlTmB-iulxHP1dCQWV",
+            "sha1": "8a3700bdc13e00336a815fc7afff5dcc1ce08546",
+            },
+        ]
+
+        def sha1sum(path):
+            h = hashlib.sha1()
+            with open(path, "rb") as f:
+                while True:
+                    chunk = f.read(8192)
+                    if not chunk:
+                        break
+                    h.update(chunk)
+            return h.hexdigest()
+
+        for model in db_models:
+            model_path = os.path.join(models_dir, model["filename"])
+            if not os.path.exists(model_path):
+                print(f"Downloading {model['filename']} ...")
+            # Use wget for Google Drive direct download
+            os.system(f"wget -O '{model_path}' '{model['url']}'")
+            # Verify SHA1
+            if os.path.exists(model_path):
+                actual_sha = sha1sum(model_path)
+                if actual_sha != model["sha1"]:
+                    print(f"SHA1 mismatch for {model['filename']}: expected {model['sha1']}, got {actual_sha}")
+                else:
+                    print(f"{model['filename']} downloaded and verified.")
+            else:
+                print(f"Failed to download {model['filename']}.")
+
+        # raise NotImplementedError("Model downloader is not implemented in this reference class.")
 
     def save_yaml(self, path: str, pipelines: Optional[Dict[str, List[StepType]]] = None) -> None:
         """
