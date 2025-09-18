@@ -8,11 +8,11 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "torch==2.8.0",
-        "torchvision==0.18.0",
-        "opencv-python==4.12.0.0",
-        "scikit-image==0.23.2",
-        "scipy==1.13.0"
+        "torch>=2.8.0",
+        "torchvision>=0.18.0",
+        "opencv-python>=4.12.0.0",
+        "scikit-image>=0.23.2",
+        "scipy>=1.13.0"
     ],
     python_requires=">=3.8",
 )
