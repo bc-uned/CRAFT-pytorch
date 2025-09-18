@@ -76,7 +76,7 @@ def getDetBoxes_core(textmap, linkmap, text_threshold, link_threshold, low_text)
         det.append(box)
         mapper.append(k)
 
-    return det, labels, mapper
+    return det, labels, mapper, det_scores
 
 def getPoly_core(boxes, labels, mapper, linkmap):
     # configs
@@ -232,7 +232,7 @@ def getDetBoxes(textmap, linkmap, text_threshold, link_threshold, low_text, poly
     else:
         polys = [None] * len(boxes)
 
-    return boxes, polys
+    return boxes, polys, det_scores
 
 def adjustResultCoordinates(polys, ratio_w, ratio_h, ratio_net = 2):
     if len(polys) > 0:
